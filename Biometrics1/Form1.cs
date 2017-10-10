@@ -8,7 +8,7 @@ namespace Biometrics1
 {
     public partial class Form1 : Form
     {
-        int oldbr = 0;
+        int oldbr = 0, oldc = 0;
         OpenFileDialog op;
 
         public Form1()
@@ -18,6 +18,7 @@ namespace Biometrics1
 
         private void ChooseIm(object sender, EventArgs e)
         {
+            if(pictureBox1.Image!=null) pictureBox1.Image.Dispose();
             op = new OpenFileDialog();
             //op.Filter = "JPeg Image|*.jpg|Bitmap Image|*.bmp|Gif Image|*.gif";
             if(op.ShowDialog()==DialogResult.OK)
@@ -34,19 +35,26 @@ namespace Biometrics1
             sv.FileName = "New_image";
             if(sv.ShowDialog()==DialogResult.OK)
             {
-                pictureBox1.Image.Save(sv.FileName);
+                try
+                {
+                    pictureBox1.Image.Save(sv.FileName);
+                }
+                catch (System.Runtime.InteropServices.ExternalException)
+                {
+                    MessageBox.Show("File is in use and cannot be modified\nTry saving to another file");
+                }
             }
         }
 
         private void ToStart(object sender, EventArgs e)
         {
-            Trace.WriteLine("toStart");
+            //Trace.WriteLine("toStart");
             BrightnessBar.Value = 0;
             ContrastBar.Value = 0;
             pictureBox1.Load(op.FileName);
         }
 
-        private int Check(float n)
+        private int Check(double n)
         {
             if (n < 0) return 0;
             else if (n > 255) return 255;
@@ -82,7 +90,8 @@ namespace Biometrics1
 
         private void Brightness(object sender, EventArgs e)
         {
-            float change = ((float)(BrightnessBar.Value - oldbr))/10.0f;
+            float change = ((float)(BrightnessBar.Value - oldbr))/2.0f;//recalculated by percents
+            oldbr = BrightnessBar.Value;
 
             Color c;
             Bitmap b = (Bitmap)pictureBox1.Image;
@@ -90,27 +99,30 @@ namespace Biometrics1
                 for (int i = 0; i < b.Width; i++)
                 {
                     c = b.GetPixel(i, j);
-                    //Trace.WriteLine(c.R + " " + c.G + " " + c.B);
-                    //Trace.WriteLine(c.R+change + " " + c.G+change + " " + c.B+change);
                     b.SetPixel(i, j, Color.FromArgb(c.A, Check(c.R+change), Check(c.G+change), Check(c.B+change)));
                 }
-            Trace.WriteLine("Done");
+            //Trace.WriteLine("Done");
             pictureBox1.Image = b;
         }
 
         private void Contrast(object sender, EventArgs e)
         {
-            int factor = (259 * (ContrastBar.Value + 255)) / (255 * (259 - ContrastBar.Value));
+            float contr = ((float)(ContrastBar.Value-oldc + 255)) / 255.0f;
+            contr *= contr;
+            oldc = ContrastBar.Value;
+
             Color c;
             Bitmap b = (Bitmap)pictureBox1.Image;
             for (int j = 0; j < b.Height; j++)
                 for (int i = 0; i < b.Width; i++)
                 {
                     c = b.GetPixel(i, j);
-                    b.SetPixel(i, j, Color.FromArgb(c.A, Check(factor*( c.R-128)+128), Check(factor * (c.G - 128) + 128), Check(factor * (c.B - 128) + 128)));
+                    b.SetPixel(i, j, Color.FromArgb(c.A, Check((((float)c.R / 255.0 - 0.5) * contr + 0.5) * 255.0),
+                        Check((((float)c.G / 255.0 - 0.5) * contr + 0.5) * 255.0),
+                        Check((((float)c.B / 255.0 - 0.5) * contr + 0.5) * 255.0)));
                 }
-            Trace.WriteLine("Done");
-            pictureBox1.Image = b;//how many times can be changed??
+            //Trace.WriteLine("Done");
+            pictureBox1.Image = b;
         }
     }
 }
