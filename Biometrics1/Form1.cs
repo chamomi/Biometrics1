@@ -3,6 +3,8 @@ using System.Diagnostics;
 using System.Drawing;
 using System.Drawing.Imaging;
 using System.Windows.Forms;
+using System.Resources;
+using System.Drawing.Drawing2D;
 
 namespace Biometrics1
 {
@@ -10,30 +12,37 @@ namespace Biometrics1
     {
         int oldbr = 0, oldc = 0;
         OpenFileDialog op;
+        bool GRAY = false;
 
         public Form1()
         {
             InitializeComponent();
         }
 
+        //Opens image
         private void ChooseIm(object sender, EventArgs e)
         {
-            if(pictureBox1.Image!=null) pictureBox1.Image.Dispose();
+            if (pictureBox1.Image != null)
+            {
+                pictureBox1.Image.Dispose();
+                Start();
+            }
             op = new OpenFileDialog();
             //op.Filter = "JPeg Image|*.jpg|Bitmap Image|*.bmp|Gif Image|*.gif";
-            if(op.ShowDialog()==DialogResult.OK)
+            if (op.ShowDialog() == DialogResult.OK)
             {
                 pictureBox1.Image = Image.FromFile(op.FileName);
             }
         }
 
+        //Saves current version of image to file
         private void SaveIm(object sender, EventArgs e)
         {
             SaveFileDialog sv = new SaveFileDialog();
             sv.DefaultExt = ".jpg";
             //sv.Filter = "JPeg Image|*.jpg|Bitmap Image|*.bmp|Gif Image|*.gif";
             sv.FileName = "New_image";
-            if(sv.ShowDialog()==DialogResult.OK)
+            if (sv.ShowDialog() == DialogResult.OK)
             {
                 try
                 {
@@ -46,14 +55,44 @@ namespace Biometrics1
             }
         }
 
+        //Reopens initial image file
         private void ToStart(object sender, EventArgs e)
         {
             //Trace.WriteLine("toStart");
-            BrightnessBar.Value = 0;
-            ContrastBar.Value = 0;
             pictureBox1.Load(op.FileName);
+            Start();
         }
 
+        //Initial state of controls
+        private void Start()
+        {
+            BrightnessBar.Value = 0;
+            ContrastBar.Value = 0;
+            oldbr = 0;
+            oldc = 0;
+            GRAY = false;
+            ThresholdBar.Value = 0;
+            ThresholdBar.Enabled = true;
+            pictureBox1.Load(op.FileName);
+            if (GrayHist.Image != null) GrayHist.Image.Dispose();
+            if (RHist.Image != null)
+            {
+                RHist.Image.Dispose();
+                RHist.Image = null;
+            }
+            if (GHist.Image != null)
+            {
+                GHist.Image.Dispose();
+                GHist.Image = null;
+            }
+            if (BHist.Image != null)
+            {
+                BHist.Image.Dispose();
+                BHist.Image = null;
+            }
+        }
+
+        //Checks if value is in color range
         private int Check(double n)
         {
             if (n < 0) return 0;
@@ -61,20 +100,31 @@ namespace Biometrics1
             else return (int)n;
         }
 
+        //Grayscale button click
         private void Grayscale(object sender, EventArgs e)
         {
             Color c;
             Bitmap b = (Bitmap)pictureBox1.Image;
-            for(int j=0;j<b.Height;j++)
-                for(int i=0;i<b.Width;i++)
+            for (int j = 0; j < b.Height; j++)
+                for (int i = 0; i < b.Width; i++)
                 {
                     c = b.GetPixel(i, j);
                     int avg = (c.R + c.G + c.B) / 3;
-                    b.SetPixel(i, j, Color.FromArgb(c.A, avg, avg, avg));
+                    try
+                    {
+                        b.SetPixel(i, j, Color.FromArgb(c.A, avg, avg, avg));
+                    }
+                    catch (InvalidOperationException)
+                    {
+                        MessageBox.Show("Images with indexes pixels are unfortunately unsupported");
+                        break;
+                    }
                 }
             pictureBox1.Image = b;
+            GRAY = true;
         }
 
+        //Negation button click
         private void Negation(object sender, EventArgs e)
         {
             Color c;
@@ -83,14 +133,15 @@ namespace Biometrics1
                 for (int i = 0; i < b.Width; i++)
                 {
                     c = b.GetPixel(i, j);
-                    b.SetPixel(i, j, Color.FromArgb(c.A, 255-c.R, 255-c.G, 255-c.B));
+                    b.SetPixel(i, j, Color.FromArgb(c.A, 255 - c.R, 255 - c.G, 255 - c.B));
                 }
             pictureBox1.Image = b;
         }
 
+        //BrightnessBar adjustment, applies its value change to image
         private void Brightness(object sender, EventArgs e)
         {
-            float change = ((float)(BrightnessBar.Value - oldbr))/2.0f;//recalculated by percents
+            float change = ((float)(BrightnessBar.Value - oldbr)) / 2.0f;//recalculated by percents
             oldbr = BrightnessBar.Value;
 
             Color c;
@@ -99,15 +150,16 @@ namespace Biometrics1
                 for (int i = 0; i < b.Width; i++)
                 {
                     c = b.GetPixel(i, j);
-                    b.SetPixel(i, j, Color.FromArgb(c.A, Check(c.R+change), Check(c.G+change), Check(c.B+change)));
+                    b.SetPixel(i, j, Color.FromArgb(c.A, Check(c.R + change), Check(c.G + change), Check(c.B + change)));
                 }
             //Trace.WriteLine("Done");
             pictureBox1.Image = b;
         }
 
+        //ContrastBar adjustment, applies its value change to image
         private void Contrast(object sender, EventArgs e)
         {
-            float contr = ((float)(ContrastBar.Value-oldc + 255)) / 255.0f;
+            float contr = ((float)(ContrastBar.Value - oldc + 255)) / 255.0f;
             contr *= contr;
             oldc = ContrastBar.Value;
 
@@ -123,6 +175,232 @@ namespace Biometrics1
                 }
             //Trace.WriteLine("Done");
             pictureBox1.Image = b;
+        }
+
+        //Threshold slider adjustment, applies ThresholdBar value to image
+        private void Threshold(object sender, EventArgs e)
+        {
+            Color c;
+            //Trace.WriteLine("threshold");
+            Bitmap b = (Bitmap)pictureBox1.Image;
+
+            for (int j = 0; j < b.Height; j++)
+                for (int i = 0; i < b.Width; i++)
+                {
+                    c = b.GetPixel(i, j);
+                    if ((c.R + c.G + c.B) < ThresholdBar.Value)
+                        b.SetPixel(i, j, Color.FromArgb(c.A, 0, 0, 0));
+                    else b.SetPixel(i, j, Color.FromArgb(c.A, 255, 255, 255));
+                }
+            pictureBox1.Image = b;
+            GRAY = true;
+            ThresholdBar.Enabled = false;
+        }
+
+        //Otsu Treshold button click
+        //Invokes threshold finding and applies it
+        private void OtsuThreshold(object sender, EventArgs e)
+        {
+            button3.PerformClick();//grayscale
+            int th = FindOtsu() * 3;
+
+            Color c;
+            Bitmap b = (Bitmap)pictureBox1.Image;
+
+            for (int j = 0; j < b.Height; j++)
+                for (int i = 0; i < b.Width; i++)
+                {
+                    c = b.GetPixel(i, j);
+                    if ((c.R + c.G + c.B) < th)
+                        b.SetPixel(i, j, Color.FromArgb(c.A, 0, 0, 0));
+                    else b.SetPixel(i, j, Color.FromArgb(c.A, 255, 255, 255));
+                }
+            pictureBox1.Image = b;
+            
+        }
+
+        //Returns Otsu threshold for image
+        private int FindOtsu() //https://www.codeproject.com/Articles/38319/Famous-Otsu-Thresholding-in-C
+        {
+            int t = 0;
+
+            int[] hist = new int[256];
+            GrHist(hist);
+
+            float p1, p2, p12;
+            float[] vec = new float[256];
+            for (int i = 1; i < 255; i++)
+            {
+                p1 = Px(0, i, hist);
+                p2 = Px(i + 1, 255, hist);
+                p12 = p1 * p2;
+                if (p12 == 0)
+                    p12 = 1;
+                float diff = (Mx(0, i, hist) * p2) - (Mx(i + 1, 255, hist) * p1);
+                vec[i] = diff * diff / p12;
+            }
+
+            float max = 0;
+            for(int i=0;i<vec.Length;i++)
+                if(vec[i]>max)
+                {
+                    max = vec[i];
+                    t = i;
+                }
+            return t;
+        }
+
+        //Helper function for FindOtsu(), sums given part of array
+        private static float Px(int init, int end, int[] hist)
+        {
+            int sum = 0;
+            int i;
+
+            for (i = init; i <= end; i++)
+                sum += hist[i];
+
+            return (float)sum;
+        }
+
+        //Helper function for FindOtsu()
+        private static float Mx(int init, int end, int[] hist)
+        {
+            int sum = 0;
+            int i;
+
+            for (i = init; i <= end; i++)
+                sum += i * hist[i];
+
+            return (float)sum;
+        }
+
+        //Creates histogram for grayscale image
+        private void GrHist(int[] hist)
+        {
+            hist.Initialize();
+
+            Color c;
+            Bitmap b = (Bitmap)pictureBox1.Image;
+
+            for (int j = 0; j < b.Height; j++)
+                for (int i = 0; i < b.Width; i++)
+                {
+                    c = b.GetPixel(i, j);
+                    hist[c.R]++;
+                }
+        }
+
+        //Creates histograms for color image
+        private void Hist(int[][] hist)
+        {
+            hist.Initialize();
+
+            Color c;
+            Bitmap b = (Bitmap)pictureBox1.Image;
+
+            for (int j = 0; j < b.Height; j++)
+                for (int i = 0; i < b.Width; i++)
+                {
+                    c = b.GetPixel(i, j);
+                    hist[0][c.R]++;
+                    hist[1][c.G]++;
+                    hist[2][c.B]++;
+                }
+        }
+
+        //Returns max value in array(histogram)
+        private int MaxHist(int[] hist)
+        {
+            int max = 0;
+            for(int i=0;i<hist.Length;i++)
+                if (hist[i] > max) max = hist[i];
+            return max;
+        }
+
+        //Histogram button click
+        //Invokes creation and drawing of histogram
+        private void Histogram_Click(object sender, EventArgs e)
+        {
+            if(GRAY==true)
+            {
+                int[] histg = new int[256];
+                GrHist(histg);
+                DrawHist(histg, -1);
+            }
+            else
+            {
+                int[][] hist = new int[3][];
+                for (int i = 0; i < 3; i++)
+                    hist[i] = new int[256];
+                Hist(hist);
+                for(int i=0;i<3;i++)
+                    DrawHist(hist[i], i);
+            }
+        }
+
+        //Draws Grayscale or RGB histograms in pictureboxes based on color col
+        private void DrawHist(int[] hist, int col)
+        {
+            Color c;
+            switch (col)
+            {
+                case 0:
+                    c = Color.Red;
+                    break;
+                case 1:
+                    c = Color.Green;
+                    break;
+                case 2:
+                    c = Color.Blue;
+                    break;
+                default:
+                    c = Color.Black;
+                    break;
+            }
+
+            int m = MaxHist(hist);
+            Bitmap img = new Bitmap(256, m + 10);
+
+            Graphics gr = Graphics.FromImage(img);
+            RectangleF data_bounds = new RectangleF(0, 0, hist.Length, m);
+            PointF[] points =
+            {
+                    new PointF(0, m),
+                    new PointF(256, m),
+                    new PointF(0, 0)
+                };
+            Matrix transformation = new Matrix(data_bounds, points);
+            gr.Transform = transformation;
+
+            using (Pen thin_pen = new Pen(c, 0))
+            {
+                for (int i = 0; i < hist.Length; i++)
+                {
+                    RectangleF rect = new RectangleF(i, 0, 1, hist[i]);
+                    using (Brush the_brush =
+                        new SolidBrush(c))
+                    {
+                        gr.FillRectangle(the_brush, rect);
+                        gr.DrawRectangle(thin_pen, rect.X, rect.Y,
+                            rect.Width, rect.Height);
+                    }
+                }
+            }
+            switch (col)
+            {
+                case 0:
+                    RHist.Image = img;
+                    break;
+                case 1:
+                    GHist.Image = img;
+                    break;
+                case 2:
+                    BHist.Image = img;
+                    break;
+                default:
+                    GrayHist.Image = img;
+                    break;
+            }
         }
     }
 }
