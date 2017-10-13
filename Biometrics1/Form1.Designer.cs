@@ -63,6 +63,10 @@
             this.label9 = new System.Windows.Forms.Label();
             this.label10 = new System.Windows.Forms.Label();
             this.label11 = new System.Windows.Forms.Label();
+            this.HorProj = new System.Windows.Forms.PictureBox();
+            this.VertProj = new System.Windows.Forms.PictureBox();
+            this.label12 = new System.Windows.Forms.Label();
+            this.label13 = new System.Windows.Forms.Label();
             ((System.ComponentModel.ISupportInitialize)(this.pictureBox1)).BeginInit();
             this.groupBox1.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)(this.ThresholdBar)).BeginInit();
@@ -72,6 +76,8 @@
             ((System.ComponentModel.ISupportInitialize)(this.GHist)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.BHist)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.GrayHist)).BeginInit();
+            ((System.ComponentModel.ISupportInitialize)(this.HorProj)).BeginInit();
+            ((System.ComponentModel.ISupportInitialize)(this.VertProj)).BeginInit();
             this.SuspendLayout();
             // 
             // label2
@@ -310,6 +316,7 @@
             this.button7.TabIndex = 8;
             this.button7.Text = "Projection";
             this.button7.UseVisualStyleBackColor = true;
+            this.button7.Click += new System.EventHandler(this.Projection);
             // 
             // button6
             // 
@@ -382,7 +389,7 @@
             this.RHist.BackColor = System.Drawing.Color.White;
             this.RHist.Location = new System.Drawing.Point(207, 478);
             this.RHist.Name = "RHist";
-            this.RHist.Size = new System.Drawing.Size(160, 78);
+            this.RHist.Size = new System.Drawing.Size(160, 100);
             this.RHist.SizeMode = System.Windows.Forms.PictureBoxSizeMode.StretchImage;
             this.RHist.TabIndex = 9;
             this.RHist.TabStop = false;
@@ -392,7 +399,7 @@
             this.GHist.BackColor = System.Drawing.Color.White;
             this.GHist.Location = new System.Drawing.Point(395, 478);
             this.GHist.Name = "GHist";
-            this.GHist.Size = new System.Drawing.Size(160, 78);
+            this.GHist.Size = new System.Drawing.Size(160, 100);
             this.GHist.SizeMode = System.Windows.Forms.PictureBoxSizeMode.StretchImage;
             this.GHist.TabIndex = 10;
             this.GHist.TabStop = false;
@@ -402,7 +409,7 @@
             this.BHist.BackColor = System.Drawing.Color.White;
             this.BHist.Location = new System.Drawing.Point(587, 478);
             this.BHist.Name = "BHist";
-            this.BHist.Size = new System.Drawing.Size(160, 78);
+            this.BHist.Size = new System.Drawing.Size(160, 100);
             this.BHist.SizeMode = System.Windows.Forms.PictureBoxSizeMode.StretchImage;
             this.BHist.TabIndex = 11;
             this.BHist.TabStop = false;
@@ -412,7 +419,7 @@
             this.GrayHist.BackColor = System.Drawing.Color.White;
             this.GrayHist.Location = new System.Drawing.Point(15, 478);
             this.GrayHist.Name = "GrayHist";
-            this.GrayHist.Size = new System.Drawing.Size(160, 78);
+            this.GrayHist.Size = new System.Drawing.Size(160, 100);
             this.GrayHist.SizeMode = System.Windows.Forms.PictureBoxSizeMode.StretchImage;
             this.GrayHist.TabIndex = 12;
             this.GrayHist.TabStop = false;
@@ -457,12 +464,56 @@
             this.label11.TabIndex = 16;
             this.label11.Text = "Blue Histogram";
             // 
+            // HorProj
+            // 
+            this.HorProj.BackColor = System.Drawing.Color.White;
+            this.HorProj.Location = new System.Drawing.Point(15, 599);
+            this.HorProj.Name = "HorProj";
+            this.HorProj.Size = new System.Drawing.Size(160, 59);
+            this.HorProj.SizeMode = System.Windows.Forms.PictureBoxSizeMode.StretchImage;
+            this.HorProj.TabIndex = 17;
+            this.HorProj.TabStop = false;
+            // 
+            // VertProj
+            // 
+            this.VertProj.BackColor = System.Drawing.Color.White;
+            this.VertProj.Location = new System.Drawing.Point(207, 599);
+            this.VertProj.Name = "VertProj";
+            this.VertProj.Size = new System.Drawing.Size(160, 59);
+            this.VertProj.SizeMode = System.Windows.Forms.PictureBoxSizeMode.StretchImage;
+            this.VertProj.TabIndex = 18;
+            this.VertProj.TabStop = false;
+            // 
+            // label12
+            // 
+            this.label12.AutoSize = true;
+            this.label12.Font = new System.Drawing.Font("Microsoft Sans Serif", 9F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(204)));
+            this.label12.Location = new System.Drawing.Point(37, 581);
+            this.label12.Name = "label12";
+            this.label12.Size = new System.Drawing.Size(120, 15);
+            this.label12.TabIndex = 19;
+            this.label12.Text = "Horizontal projection";
+            // 
+            // label13
+            // 
+            this.label13.AutoSize = true;
+            this.label13.Font = new System.Drawing.Font("Microsoft Sans Serif", 9F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(204)));
+            this.label13.Location = new System.Drawing.Point(235, 581);
+            this.label13.Name = "label13";
+            this.label13.Size = new System.Drawing.Size(104, 15);
+            this.label13.TabIndex = 20;
+            this.label13.Text = "Vertical projection";
+            // 
             // Form1
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.BackColor = System.Drawing.Color.PaleTurquoise;
-            this.ClientSize = new System.Drawing.Size(764, 568);
+            this.ClientSize = new System.Drawing.Size(764, 670);
+            this.Controls.Add(this.label13);
+            this.Controls.Add(this.label12);
+            this.Controls.Add(this.VertProj);
+            this.Controls.Add(this.HorProj);
             this.Controls.Add(this.label11);
             this.Controls.Add(this.label10);
             this.Controls.Add(this.label9);
@@ -493,6 +544,8 @@
             ((System.ComponentModel.ISupportInitialize)(this.GHist)).EndInit();
             ((System.ComponentModel.ISupportInitialize)(this.BHist)).EndInit();
             ((System.ComponentModel.ISupportInitialize)(this.GrayHist)).EndInit();
+            ((System.ComponentModel.ISupportInitialize)(this.HorProj)).EndInit();
+            ((System.ComponentModel.ISupportInitialize)(this.VertProj)).EndInit();
             this.ResumeLayout(false);
             this.PerformLayout();
 
@@ -534,6 +587,10 @@
         private System.Windows.Forms.Label label9;
         private System.Windows.Forms.Label label10;
         private System.Windows.Forms.Label label11;
+        private System.Windows.Forms.PictureBox HorProj;
+        private System.Windows.Forms.PictureBox VertProj;
+        private System.Windows.Forms.Label label12;
+        private System.Windows.Forms.Label label13;
     }
 }
 

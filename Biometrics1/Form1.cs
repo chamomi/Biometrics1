@@ -28,7 +28,7 @@ namespace Biometrics1
                 Start();
             }
             op = new OpenFileDialog();
-            //op.Filter = "JPeg Image|*.jpg|Bitmap Image|*.bmp|Gif Image|*.gif";
+            op.Filter = "JPeg Image|*.jpg|Bitmap Image|*.bmp|Gif Image|*.gif";
             if (op.ShowDialog() == DialogResult.OK)
             {
                 pictureBox1.Image = Image.FromFile(op.FileName);
@@ -40,7 +40,7 @@ namespace Biometrics1
         {
             SaveFileDialog sv = new SaveFileDialog();
             sv.DefaultExt = ".jpg";
-            //sv.Filter = "JPeg Image|*.jpg|Bitmap Image|*.bmp|Gif Image|*.gif";
+            sv.Filter = "JPeg Image|*.jpg|Bitmap Image|*.bmp|Gif Image|*.gif";
             sv.FileName = "New_image";
             if (sv.ShowDialog() == DialogResult.OK)
             {
@@ -58,7 +58,6 @@ namespace Biometrics1
         //Reopens initial image file
         private void ToStart(object sender, EventArgs e)
         {
-            //Trace.WriteLine("toStart");
             pictureBox1.Load(op.FileName);
             Start();
         }
@@ -74,7 +73,11 @@ namespace Biometrics1
             ThresholdBar.Value = 0;
             ThresholdBar.Enabled = true;
             pictureBox1.Load(op.FileName);
-            if (GrayHist.Image != null) GrayHist.Image.Dispose();
+            if (GrayHist.Image != null)
+            {
+                GrayHist.Image.Dispose();
+                GrayHist.Image = null;
+            }
             if (RHist.Image != null)
             {
                 RHist.Image.Dispose();
@@ -89,6 +92,16 @@ namespace Biometrics1
             {
                 BHist.Image.Dispose();
                 BHist.Image = null;
+            }
+            if(VertProj.Image!=null)
+            {
+                VertProj.Image.Dispose();
+                VertProj.Image = null;
+            }
+            if(HorProj.Image!=null)
+            {
+                HorProj.Image.Dispose();
+                HorProj.Image = null;
             }
         }
 
@@ -152,7 +165,6 @@ namespace Biometrics1
                     c = b.GetPixel(i, j);
                     b.SetPixel(i, j, Color.FromArgb(c.A, Check(c.R + change), Check(c.G + change), Check(c.B + change)));
                 }
-            //Trace.WriteLine("Done");
             pictureBox1.Image = b;
         }
 
@@ -173,7 +185,6 @@ namespace Biometrics1
                         Check((((float)c.G / 255.0 - 0.5) * contr + 0.5) * 255.0),
                         Check((((float)c.B / 255.0 - 0.5) * contr + 0.5) * 255.0)));
                 }
-            //Trace.WriteLine("Done");
             pictureBox1.Image = b;
         }
 
@@ -181,14 +192,13 @@ namespace Biometrics1
         private void Threshold(object sender, EventArgs e)
         {
             Color c;
-            //Trace.WriteLine("threshold");
             Bitmap b = (Bitmap)pictureBox1.Image;
 
             for (int j = 0; j < b.Height; j++)
                 for (int i = 0; i < b.Width; i++)
                 {
                     c = b.GetPixel(i, j);
-                    if ((c.R + c.G + c.B) < ThresholdBar.Value)
+                    if ((c.R + c.G + c.B) < ThresholdBar.Value*3)
                         b.SetPixel(i, j, Color.FromArgb(c.A, 0, 0, 0));
                     else b.SetPixel(i, j, Color.FromArgb(c.A, 255, 255, 255));
                 }
@@ -202,7 +212,7 @@ namespace Biometrics1
         private void OtsuThreshold(object sender, EventArgs e)
         {
             button3.PerformClick();//grayscale
-            int th = FindOtsu() * 3;
+            int th = FindOtsu() *3;
 
             Color c;
             Bitmap b = (Bitmap)pictureBox1.Image;
@@ -216,7 +226,9 @@ namespace Biometrics1
                     else b.SetPixel(i, j, Color.FromArgb(c.A, 255, 255, 255));
                 }
             pictureBox1.Image = b;
-            
+
+            ThresholdBar.Value = th/3;
+            ThresholdBar.Enabled = false;
         }
 
         //Returns Otsu threshold for image
@@ -224,19 +236,21 @@ namespace Biometrics1
         {
             int t = 0;
 
-            int[] hist = new int[256];
-            GrHist(hist);
+            int[][] hist = new int[3][];
+            for (int i = 0; i < 3; i++)
+                hist[i] = new int[256];
+            Hist(hist);
 
             float p1, p2, p12;
             float[] vec = new float[256];
             for (int i = 1; i < 255; i++)
             {
-                p1 = Px(0, i, hist);
-                p2 = Px(i + 1, 255, hist);
+                p1 = Px(0, i, hist[0]);
+                p2 = Px(i + 1, 255, hist[0]);
                 p12 = p1 * p2;
                 if (p12 == 0)
                     p12 = 1;
-                float diff = (Mx(0, i, hist) * p2) - (Mx(i + 1, 255, hist) * p1);
+                float diff = (Mx(0, i, hist[0]) * p2) - (Mx(i + 1, 255, hist[0]) * p1);
                 vec[i] = diff * diff / p12;
             }
 
@@ -274,23 +288,7 @@ namespace Biometrics1
             return (float)sum;
         }
 
-        //Creates histogram for grayscale image
-        private void GrHist(int[] hist)
-        {
-            hist.Initialize();
-
-            Color c;
-            Bitmap b = (Bitmap)pictureBox1.Image;
-
-            for (int j = 0; j < b.Height; j++)
-                for (int i = 0; i < b.Width; i++)
-                {
-                    c = b.GetPixel(i, j);
-                    hist[c.R]++;
-                }
-        }
-
-        //Creates histograms for color image
+        //Creates histograms for image
         private void Hist(int[][] hist)
         {
             hist.Initialize();
@@ -321,45 +319,27 @@ namespace Biometrics1
         //Invokes creation and drawing of histogram
         private void Histogram_Click(object sender, EventArgs e)
         {
-            if(GRAY==true)
-            {
-                int[] histg = new int[256];
-                GrHist(histg);
-                DrawHist(histg, -1);
-            }
+            Color[] RGB = new Color[3];
+            RGB[0] = Color.Red;
+            RGB[1] = Color.Green;
+            RGB[2] = Color.Blue;
+
+            int[][] hist = new int[3][];
+            for (int i = 0; i < 3; i++)
+                hist[i] = new int[256];
+            Hist(hist);
+            if (GRAY == true) DrawHist(hist[0], Color.Black);
             else
-            {
-                int[][] hist = new int[3][];
-                for (int i = 0; i < 3; i++)
-                    hist[i] = new int[256];
-                Hist(hist);
-                for(int i=0;i<3;i++)
-                    DrawHist(hist[i], i);
-            }
+                for (int i=0;i<3;i++)
+                   DrawHist(hist[i], RGB[i]);
         }
 
-        //Draws Grayscale or RGB histograms in pictureboxes based on color col
-        private void DrawHist(int[] hist, int col)
-        {
-            Color c;
-            switch (col)
-            {
-                case 0:
-                    c = Color.Red;
-                    break;
-                case 1:
-                    c = Color.Green;
-                    break;
-                case 2:
-                    c = Color.Blue;
-                    break;
-                default:
-                    c = Color.Black;
-                    break;
-            }
 
+        //Draws Grayscale or RGB histograms in pictureboxes based on color col
+        private void DrawHist(int[] hist, Color c)
+        {
             int m = MaxHist(hist);
-            Bitmap img = new Bitmap(256, m + 10);
+            Bitmap img = new Bitmap(256, m);
 
             Graphics gr = Graphics.FromImage(img);
             RectangleF data_bounds = new RectangleF(0, 0, hist.Length, m);
@@ -368,7 +348,7 @@ namespace Biometrics1
                     new PointF(0, m),
                     new PointF(256, m),
                     new PointF(0, 0)
-                };
+            };
             Matrix transformation = new Matrix(data_bounds, points);
             gr.Transform = transformation;
 
@@ -386,21 +366,85 @@ namespace Biometrics1
                     }
                 }
             }
-            switch (col)
+            //show img in appropriate picturebox
+            if (c == Color.Red)
             {
-                case 0:
-                    RHist.Image = img;
-                    break;
-                case 1:
-                    GHist.Image = img;
-                    break;
-                case 2:
-                    BHist.Image = img;
-                    break;
-                default:
-                    GrayHist.Image = img;
-                    break;
+                if (RHist.Image != null)
+                    RHist.Image.Dispose();
+
+                RHist.Image = img;
+            }
+            else if (c == Color.Green)
+            {
+                if (GHist.Image != null)
+                    GHist.Image.Dispose();
+
+                GHist.Image = img;
+            }
+            else if (c == Color.Blue)
+            {
+                if (BHist.Image != null)
+                    BHist.Image.Dispose();
+
+                BHist.Image = img;
+            }
+            else if (c == Color.Orange)
+            {
+                if (VertProj.Image != null)
+                    VertProj.Image.Dispose();
+
+                VertProj.Image = img;
+            }
+            else if (c == Color.Purple)
+            {
+                if (HorProj.Image != null)
+                    HorProj.Image.Dispose();
+
+                HorProj.Image = img;
+            }
+            else
+            {
+                if (GrayHist.Image != null)
+                    GrayHist.Image.Dispose();
+
+                GrayHist.Image = img;
             }
         }
+
+        //Projection button click
+        //Creates vertical and horizontal projection, invokes thier drawing
+        //Quite slow
+        private void Projection(object sender, EventArgs e)
+        {
+            Color c;
+            Bitmap b = (Bitmap)pictureBox1.Image;
+
+            //vertical projection
+            int[] ProjX = new int[b.Width];
+            for (int j = 0; j < b.Width; j++)
+            {
+                ProjX[j] = 0;
+                for (int i = 0; i < b.Height; i++)
+                {
+                    c = b.GetPixel(j, i);
+                    ProjX[j] += c.R + c.G + c.B;
+                }
+            }
+            DrawHist(ProjX, Color.Orange);
+
+            //horizontal projection
+            int[] ProjY = new int[b.Height];
+            for (int j = 0; j < b.Height; j++)
+            {
+                ProjY[j] = 0;
+                for (int i = 0; i < b.Width; i++)
+                {
+                    c = b.GetPixel(i, j);
+                    ProjY[j] += c.R + c.G + c.B;
+                }
+            }
+            DrawHist(ProjY, Color.Purple);
+        }
+
     }
 }
