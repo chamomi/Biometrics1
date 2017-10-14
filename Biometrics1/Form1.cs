@@ -531,5 +531,61 @@ namespace Biometrics1
             }
             return sum;
         }
+
+        //Averaging button click
+        //Invokes image extension, averages colors from 3x3 squares
+        private void Averaging(object sender, EventArgs e)
+        {
+            Bitmap b = ExtendBitmap((Bitmap)pictureBox1.Image);
+            Bitmap result = new Bitmap(pictureBox1.Image);
+
+            pictureBox1.Image = b;
+            for(int i=1;i<b.Width-2;i++)
+                for(int j=1;j<b.Height-2;j++)
+                {
+                    int[] sum = new int[3];
+                    for (int a = 0; a < 3; a++)
+                        sum[a] = 0;
+
+                    for(int k=i-1;k<=i+1;k++)
+                        for(int t=j-1;t<=j+1;t++)
+                        {
+                            sum[0] += b.GetPixel(k, t).R;
+                            sum[1] += b.GetPixel(k, t).G;
+                            sum[2] += b.GetPixel(k, t).B;
+                        }
+
+                    result.SetPixel(i - 1, j - 1, Color.FromArgb(result.GetPixel(i - 1, j - 1).A, Check(sum[0] / 9), Check(sum[1] / 9), Check(sum[2] / 9)));
+                }
+            pictureBox1.Image = result;
+        }
+
+        //Helper function for Averaging()
+        //Extends bitmap by duplicating outer border 
+        private Bitmap ExtendBitmap(Bitmap b)
+        {
+            Bitmap exten = new Bitmap(b.Width + 2, b.Height + 2);
+
+            for (int i = 1; i < exten.Width - 1; i++)
+                for (int j = 1; j < exten.Height - 1; j++)
+                    exten.SetPixel(i, j, b.GetPixel(i - 1, j - 1));
+
+            exten.SetPixel(0, 0, exten.GetPixel(1, 1));
+            exten.SetPixel(exten.Width - 1, 0, exten.GetPixel(exten.Width - 2, 1));
+            exten.SetPixel(0, exten.Height - 1, exten.GetPixel(1, exten.Height - 2));
+            exten.SetPixel(exten.Width - 1, exten.Height - 1, exten.GetPixel(exten.Width - 2, exten.Height - 2));
+
+            for (int i = 1; i < exten.Width - 1; i++)
+                exten.SetPixel(i, 0, exten.GetPixel(i, 1));
+            for (int i = 1; i < exten.Width - 1; i++)
+                exten.SetPixel(i, exten.Height - 1, exten.GetPixel(i, exten.Height - 2));
+            for (int i = 1; i < exten.Height - 1; i++)
+                exten.SetPixel(0, i, exten.GetPixel(1, i));
+            for (int i = 1; i < exten.Height - 1; i++)
+                exten.SetPixel(exten.Width - 1, i, exten.GetPixel(exten.Width - 2, i));
+
+            return exten;
+        }
+
     }
 }

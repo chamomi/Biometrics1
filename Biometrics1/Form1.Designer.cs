@@ -244,6 +244,7 @@
             this.button10.TabIndex = 10;
             this.button10.Text = "Averaging";
             this.button10.UseVisualStyleBackColor = true;
+            this.button10.Click += new System.EventHandler(this.Averaging);
             // 
             // button11
             // 
