@@ -222,6 +222,7 @@
             this.button8.TabIndex = 8;
             this.button8.Text = "Histogram stretching";
             this.button8.UseVisualStyleBackColor = true;
+            this.button8.Click += new System.EventHandler(this.HistStretch);
             // 
             // button9
             // 
@@ -232,6 +233,7 @@
             this.button9.TabIndex = 9;
             this.button9.Text = "Histogram equalization";
             this.button9.UseVisualStyleBackColor = true;
+            this.button9.Click += new System.EventHandler(this.HistEqual);
             // 
             // button10
             // 

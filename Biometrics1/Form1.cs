@@ -334,8 +334,7 @@ namespace Biometrics1
                    DrawHist(hist[i], RGB[i]);
         }
 
-
-        //Draws Grayscale or RGB histograms in pictureboxes based on color col
+        //Draws histograms in pictureboxes based on given color(Gray, RGB, Orange-vertical projection, Purple-horizontal projection PictureBox)
         private void DrawHist(int[] hist, Color c)
         {
             int m = MaxHist(hist);
@@ -446,5 +445,91 @@ namespace Biometrics1
             DrawHist(ProjY, Color.Purple);
         }
 
+        //Histogram Stretching button click
+        //Performs histogram stretching on image and updates displayed histograms
+        private void HistStretch(object sender, EventArgs e)
+        {
+            int[][] hist = new int[3][];
+            for (int i = 0; i < 3; i++)
+                hist[i] = new int[256];
+            Hist(hist);
+
+            int[] Imax = new int[3];
+            int[] Imin = new int[3];
+            for (int i = 0; i < 3; i++)
+            {
+                int j = 0;
+                while (hist[i][j] == 0) j++;
+                Imin[i] = j;
+
+                j = hist[i].Length-1;
+                while (hist[i][j] == 0) j--;
+                Imax[i] = j;
+            }
+
+            int[][] LUT = new int[3][];
+            for (int i = 0; i < 3; i++)
+            {
+                LUT[i] = new int[256];
+
+                for (int j = 0; j < 256; j++)
+                    LUT[i][j] = 255 * (j - Imin[i]) / (Imax[i] - Imin[i]);
+            }
+
+            Color c;
+            Bitmap b = new Bitmap(pictureBox1.Image);
+            for (int j = 0; j < b.Height; j++)
+                for (int i = 0; i < b.Width; i++)
+                {
+                    c = b.GetPixel(i, j);
+                    b.SetPixel(i, j, Color.FromArgb(c.A, Check(LUT[0][c.R]), Check(LUT[1][c.G]), Check(LUT[2][c.B])));
+                }
+            pictureBox1.Image = b;
+
+            button6.PerformClick();//display new histograms
+        }
+
+        //Histogram Equalization button click
+        //Performs histogram equalization on image and updates displayed histograms
+        private void HistEqual(object sender, EventArgs e)
+        {
+            int[][] hist = new int[3][];
+            for (int i = 0; i < 3; i++)
+                hist[i] = new int[256];
+            Hist(hist);
+
+            int[][] LUT = new int[3][];
+            for (int i = 0; i < 3; i++)
+            {
+                LUT[i] = new int[256];
+
+                for (int j = 0; j < 256; j++)
+                    LUT[i][j] = 255 * sum(hist[i],1,j) / sum(hist[i],1,255);
+            }
+
+            Color c;
+            Bitmap b = new Bitmap(pictureBox1.Image);
+            for (int j = 0; j < b.Height; j++)
+                for (int i = 0; i < b.Width; i++)
+                {
+                    c = b.GetPixel(i, j);
+                    b.SetPixel(i, j, Color.FromArgb(c.A, Check(LUT[0][c.R]), Check(LUT[1][c.G]), Check(LUT[2][c.B])));
+                }
+            pictureBox1.Image = b;
+
+            button6.PerformClick();//display new histograms
+        }
+
+        //Helper function for HistEqual()
+        //Sums up elements of given array with indexes a-b
+        private int sum(int[] hist, int a, int b)
+        {
+            int sum = 0;
+            for (int i = a; i <= b; i++)
+            {
+                sum += hist[i];
+            }
+            return sum;
+        }
     }
 }
