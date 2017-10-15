@@ -255,6 +255,7 @@
             this.button11.TabIndex = 11;
             this.button11.Text = "Gaussian";
             this.button11.UseVisualStyleBackColor = true;
+            this.button11.Click += new System.EventHandler(this.Gaussian);
             // 
             // button12
             // 
@@ -313,9 +314,9 @@
             // button7
             // 
             this.button7.Font = new System.Drawing.Font("Microsoft Sans Serif", 9F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(204)));
-            this.button7.Location = new System.Drawing.Point(650, 9);
+            this.button7.Location = new System.Drawing.Point(640, 9);
             this.button7.Name = "button7";
-            this.button7.Size = new System.Drawing.Size(85, 61);
+            this.button7.Size = new System.Drawing.Size(95, 61);
             this.button7.TabIndex = 8;
             this.button7.Text = "Projection";
             this.button7.UseVisualStyleBackColor = true;
@@ -324,7 +325,7 @@
             // button6
             // 
             this.button6.Font = new System.Drawing.Font("Microsoft Sans Serif", 9F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(204)));
-            this.button6.Location = new System.Drawing.Point(559, 9);
+            this.button6.Location = new System.Drawing.Point(549, 9);
             this.button6.Name = "button6";
             this.button6.Size = new System.Drawing.Size(85, 61);
             this.button6.TabIndex = 7;
@@ -532,6 +533,7 @@
             this.Controls.Add(this.button2);
             this.Controls.Add(this.button1);
             this.Controls.Add(this.label2);
+            this.FormBorderStyle = System.Windows.Forms.FormBorderStyle.FixedSingle;
             this.MaximizeBox = false;
             this.Name = "Form1";
             this.ShowIcon = false;

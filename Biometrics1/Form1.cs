@@ -587,5 +587,80 @@ namespace Biometrics1
             return exten;
         }
 
+        //Gaussian button click
+        //Invokes image extension 2 times and applies Gauss filter to image
+        private void Gaussian(object sender, EventArgs e)
+        {
+            Bitmap b = ExtendBitmap(ExtendBitmap((Bitmap)pictureBox1.Image));
+            pictureBox1.Image = ApplyGauss(b);
+        }
+
+        //Applies Gauss filter to given extended image
+        //Firstly performs horizontal filtering and then vertical one with function ApplyVector()
+        private Bitmap ApplyGauss(Bitmap b)
+        {
+            Bitmap result = new Bitmap(pictureBox1.Image);
+
+            int[] sum = new int[3];
+
+            //horizontal filter
+            for(int i=0;i<b.Width-5;i++)
+                for(int j=2;j<b.Height-3;j++)
+                {
+                    for (int k = 0; k < 3; k++)
+                        sum[k] = 0;
+                    ApplyVector(ref sum, b, i, j, 0);
+                    result.SetPixel(i, j - 2, Color.FromArgb(result.GetPixel(i, j - 2).A, Check(sum[0]), Check(sum[1]), Check(sum[2])));
+                }
+
+            //vertical filter
+            for (int i = 2; i < b.Width - 3; i++)
+                for (int j = 0; j < b.Height - 5; j++)
+                {
+                    for (int k = 0; k < 3; k++)
+                        sum[k] = 0;
+                    ApplyVector(ref sum, b, i, j, 1);
+                    result.SetPixel(i - 2, j, Color.FromArgb(result.GetPixel(i - 2, j).A, Check(sum[0]), Check(sum[1]), Check(sum[2])));
+                }
+            return result;
+        }
+
+        //Helper function for ApplyGauss()
+        //Calculates new RGB values for each pixel
+        //radius = 3; sigma = 1;
+        private void ApplyVector(ref int[] sum, Bitmap b, int w, int h, int mode)
+        {
+            double[] vector = new double[] { 1 / (Math.E * Math.E * Math.Sqrt(2 * Math.PI)),
+                        1 / Math.Sqrt(2 * Math.PI * Math.E),
+                        1 / Math.Sqrt(2 * Math.PI),
+                        1 / Math.Sqrt(2 * Math.PI * Math.E),
+                        1 / (Math.E * Math.E * Math.Sqrt(2 * Math.PI)) };
+            Color c;
+
+            switch (mode)
+            {
+                //horizontal vector
+                case 0:
+                    for (int i = 0; i < 5; i++)
+                    {
+                        c = b.GetPixel(w + i, h);
+                        sum[0] += (int)(vector[i] * c.R);
+                        sum[1] += (int)(vector[i] * c.G);
+                        sum[2] += (int)(vector[i] * c.B);
+                    }
+                    break;
+                //vertical vector
+                case 1:
+                    for (int i = 0; i < 5; i++)
+                    {
+                        c = b.GetPixel(w, h+i);
+                        sum[0] += (int)(vector[i] * c.R);
+                        sum[1] += (int)(vector[i] * c.G);
+                        sum[2] += (int)(vector[i] * c.B);
+                    }
+                    break;
+            }
+        }
+
     }
 }
