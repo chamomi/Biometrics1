@@ -609,7 +609,7 @@ namespace Biometrics1
                 {
                     for (int k = 0; k < 3; k++)
                         sum[k] = 0;
-                    ApplyVector(ref sum, b, i, j, 0);
+                    ApplyG5Vector(ref sum, b, i, j, 0);
                     result.SetPixel(i, j - 2, Color.FromArgb(result.GetPixel(i, j - 2).A, Check(sum[0]), Check(sum[1]), Check(sum[2])));
                 }
 
@@ -619,7 +619,7 @@ namespace Biometrics1
                 {
                     for (int k = 0; k < 3; k++)
                         sum[k] = 0;
-                    ApplyVector(ref sum, b, i, j, 1);
+                    ApplyG5Vector(ref sum, b, i, j, 1);
                     result.SetPixel(i - 2, j, Color.FromArgb(result.GetPixel(i - 2, j).A, Check(sum[0]), Check(sum[1]), Check(sum[2])));
                 }
             return result;
@@ -628,7 +628,7 @@ namespace Biometrics1
         //Helper function for ApplyGauss()
         //Calculates new RGB values for each pixel
         //radius = 3; sigma = 1;
-        private void ApplyVector(ref int[] sum, Bitmap b, int w, int h, int mode)
+        private void ApplyG5Vector(ref int[] sum, Bitmap b, int w, int h, int mode)
         {
             double[] vector = new double[] { 1 / (Math.E * Math.E * Math.Sqrt(2 * Math.PI)),
                         1 / Math.Sqrt(2 * Math.PI * Math.E),
@@ -662,5 +662,45 @@ namespace Biometrics1
             }
         }
 
+        //Sharpening filter button click
+        //Invokes image extention, creates sharpening kernel and invokes matrix application to image
+        private void Sharpen(object sender, EventArgs e)
+        {
+            Bitmap b = ExtendBitmap((Bitmap)pictureBox1.Image);
+
+            int[,] kernel = new int[3, 3];
+            for (int i = 0; i < 3; i++)
+                for (int j = 0; j < 3; j++)
+                    kernel[i,j] = -1;
+            kernel[1, 1] = 9;
+
+            pictureBox1.Image = ApplyMatrix(b, kernel);
+        }
+
+        //Applies kernel matrix to image b, returns processed image
+        private Bitmap ApplyMatrix(Bitmap b, int[,] kernel)
+        {
+            Bitmap result = (Bitmap)pictureBox1.Image;
+            int dim = (int)Math.Sqrt(kernel.Length);//dimention of kernel
+
+            int[] sum = new int[3];
+            Color c;
+            for(int i=0;i<b.Width-dim;i++)
+                for(int j=0;j<b.Height-dim;j++)
+                {
+                    for (int k = 0; k < 3; k++)
+                        sum[k] = 0;
+                    for (int m=0;m<dim;m++)
+                        for(int n=0;n<dim;n++)
+                        {
+                            c = b.GetPixel(i + m, j + n);
+                            sum[0] += c.R * kernel[m, n];
+                            sum[1] += c.G * kernel[m, n];
+                            sum[2] += c.B * kernel[m, n];
+                        }
+                    result.SetPixel(i, j, Color.FromArgb(result.GetPixel(i, j).A, Check(sum[0]), Check(sum[1]), Check(sum[2])));
+                }
+            return result;
+        }
     }
 }
