@@ -5,6 +5,7 @@ using System.Drawing.Imaging;
 using System.Windows.Forms;
 using System.Resources;
 using System.Drawing.Drawing2D;
+using System.Runtime.InteropServices;
 
 namespace Biometrics1
 {
@@ -698,9 +699,103 @@ namespace Biometrics1
                             sum[1] += c.G * kernel[m, n];
                             sum[2] += c.B * kernel[m, n];
                         }
-                    result.SetPixel(i, j, Color.FromArgb(result.GetPixel(i, j).A, Check(sum[0]), Check(sum[1]), Check(sum[2])));
+                    try
+                    {
+                        result.SetPixel(i, j, Color.FromArgb(result.GetPixel(i, j).A, Check(sum[0]), Check(sum[1]), Check(sum[2])));
+                    }
+                    catch (InvalidOperationException)
+                    {
+                        MessageBox.Show("Images with indexes pixels are unfortunately unsupported");
+                        break;
+                    }
                 }
             return result;
+        }
+
+        //Roberts Cross button click
+        //Invokes application of Roberts kernels, sums values of intensities of results
+        private void RobertsEdge(object sender, EventArgs e)
+        {
+            int[,] Gx = new int[2, 2] { { 1, 0 }, { 0, -1 } };
+            int[,] Gy = new int[2, 2] { { 0, 1 }, { -1, 0 } };
+
+            Bitmap b1 = ApplyMatrix((Bitmap)pictureBox1.Image, Gx);
+            Bitmap b2 = ApplyMatrix((Bitmap)pictureBox1.Image, Gy);
+
+            Bitmap result = (Bitmap)pictureBox1.Image;
+            int c;
+            for(int i=0;i<result.Width;i++)
+                for(int j=0;j<result.Height;j++)
+                {
+                    c = b1.GetPixel(i, j).R + b2.GetPixel(i, j).R;
+                    result.SetPixel(i, j, Color.FromArgb(result.GetPixel(i, j).A, Check(c), Check(c), Check(c)));
+                }
+            pictureBox1.Image = result;
+        }
+
+        //Sobel filter button click
+        //Calculates new values for each pixel by Sobel kernels
+        private void SobelEdge(object sender, EventArgs e)
+        {
+            int[,] Gx = new int[3, 3] { { -1, 0, 1 }, { -2, 0, 2 }, { -1, 0, 1 } };
+            int[,] Gy = new int[3, 3] { { 1, 2, 1 }, { 0, 0, 0 }, { -1, -2, -1 } };
+            Bitmap b = (Bitmap)pictureBox1.Image;
+            BitmapData sourceData = b.LockBits(new Rectangle(0, 0, b.Width, b.Height), ImageLockMode.ReadOnly, PixelFormat.Format32bppArgb);
+
+            byte[] pixelBuffer = new byte[sourceData.Stride * sourceData.Height];
+            byte[] resultBuffer = new byte[sourceData.Stride * sourceData.Height];
+            Marshal.Copy(sourceData.Scan0, pixelBuffer, 0, pixelBuffer.Length);
+            b.UnlockBits(sourceData);
+
+            double[] colorX = new double[3];
+            double[] colorY = new double[3];
+            double[] colorTotal = new double[3];
+
+            int filterOffset = 1;
+            int calcOffset = 0;
+            int byteOffset = 0;
+
+            for (int offsetY = filterOffset; offsetY < b.Height - filterOffset; offsetY++)
+            {
+                for (int offsetX = filterOffset; offsetX < b.Width - filterOffset; offsetX++)
+                {
+                    for (int i = 0; i < 3; i++)
+                        colorX[i] = colorY[i] = colorTotal[i] = 0;
+
+                    byteOffset = offsetY * sourceData.Stride + offsetX * 4;
+
+                    for (int filterY = -filterOffset; filterY <= filterOffset; filterY++)
+                    {
+                        for (int filterX = -filterOffset; filterX <= filterOffset; filterX++)
+                        {
+                            calcOffset = byteOffset +  (filterX * 4) +  (filterY * sourceData.Stride);
+
+                            colorX[0] += (double)(pixelBuffer[calcOffset + 2]) * Gx[filterY + filterOffset, filterX + filterOffset];
+                            colorX[1] += (double) (pixelBuffer[calcOffset + 1]) * Gx[filterY +  filterOffset,  filterX + filterOffset];
+                            colorX[2] += (double)(pixelBuffer[calcOffset]) * Gx[filterY + filterOffset, filterX + filterOffset];
+
+                            colorY[0] += (double)(pixelBuffer[calcOffset + 2]) * Gy[filterY + filterOffset, filterX + filterOffset];
+                            colorY[1] += (double) (pixelBuffer[calcOffset + 1]) * Gy[filterY + filterOffset, filterX + filterOffset];
+                            colorY[2] += (double)(pixelBuffer[calcOffset]) * Gy[filterY + filterOffset, filterX + filterOffset];
+                        }
+                    }
+                    colorTotal[0] = Math.Sqrt((colorX[0] * colorX[0]) + (colorY[0] * colorY[0]));
+                    colorTotal[1] = Math.Sqrt((colorX[1] * colorX[1]) + (colorY[1] * colorY[1]));
+                    colorTotal[2] = Math.Sqrt((colorX[2] * colorX[2]) + (colorY[2] * colorY[2]));
+
+                    resultBuffer[byteOffset] = (byte)Check(colorTotal[2]);
+                    resultBuffer[byteOffset + 1] = (byte)Check(colorTotal[1]);
+                    resultBuffer[byteOffset + 2] = (byte)Check(colorTotal[0]);
+                    resultBuffer[byteOffset + 3] = 255;
+                }
+            }
+
+            Bitmap resultBitmap = new Bitmap(b.Width, b.Height);
+            BitmapData resultData = resultBitmap.LockBits(new Rectangle(0, 0, resultBitmap.Width, resultBitmap.Height), ImageLockMode.WriteOnly, PixelFormat.Format32bppArgb);
+            Marshal.Copy(resultBuffer, 0, resultData.Scan0, resultBuffer.Length);
+            resultBitmap.UnlockBits(resultData);
+
+            pictureBox1.Image = resultBitmap;
         }
     }
 }

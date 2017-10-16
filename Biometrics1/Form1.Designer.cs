@@ -277,6 +277,7 @@
             this.button13.TabIndex = 13;
             this.button13.Text = "Roberts Cross";
             this.button13.UseVisualStyleBackColor = true;
+            this.button13.Click += new System.EventHandler(this.RobertsEdge);
             // 
             // button14
             // 
@@ -287,6 +288,7 @@
             this.button14.TabIndex = 14;
             this.button14.Text = "Sobel filter";
             this.button14.UseVisualStyleBackColor = true;
+            this.button14.Click += new System.EventHandler(this.SobelEdge);
             // 
             // ContrastBar
             // 
@@ -339,7 +341,7 @@
             this.label4.AutoSize = true;
             this.label4.Font = new System.Drawing.Font("Microsoft Sans Serif", 9F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(204)));
             this.label4.ForeColor = System.Drawing.SystemColors.ControlText;
-            this.label4.Location = new System.Drawing.Point(350, 9);
+            this.label4.Location = new System.Drawing.Point(343, 9);
             this.label4.Name = "label4";
             this.label4.Size = new System.Drawing.Size(60, 15);
             this.label4.TabIndex = 4;
@@ -372,7 +374,7 @@
             this.label3.AutoSize = true;
             this.label3.Font = new System.Drawing.Font("Microsoft Sans Serif", 9F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(204)));
             this.label3.ForeColor = System.Drawing.SystemColors.ControlText;
-            this.label3.Location = new System.Drawing.Point(201, 9);
+            this.label3.Location = new System.Drawing.Point(205, 9);
             this.label3.Name = "label3";
             this.label3.Size = new System.Drawing.Size(75, 15);
             this.label3.TabIndex = 0;
@@ -472,7 +474,7 @@
             // HorProj
             // 
             this.HorProj.BackColor = System.Drawing.Color.White;
-            this.HorProj.Location = new System.Drawing.Point(15, 599);
+            this.HorProj.Location = new System.Drawing.Point(206, 599);
             this.HorProj.Name = "HorProj";
             this.HorProj.Size = new System.Drawing.Size(160, 59);
             this.HorProj.SizeMode = System.Windows.Forms.PictureBoxSizeMode.StretchImage;
@@ -482,7 +484,7 @@
             // VertProj
             // 
             this.VertProj.BackColor = System.Drawing.Color.White;
-            this.VertProj.Location = new System.Drawing.Point(207, 599);
+            this.VertProj.Location = new System.Drawing.Point(395, 599);
             this.VertProj.Name = "VertProj";
             this.VertProj.Size = new System.Drawing.Size(160, 59);
             this.VertProj.SizeMode = System.Windows.Forms.PictureBoxSizeMode.StretchImage;
@@ -493,7 +495,7 @@
             // 
             this.label12.AutoSize = true;
             this.label12.Font = new System.Drawing.Font("Microsoft Sans Serif", 9F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(204)));
-            this.label12.Location = new System.Drawing.Point(37, 581);
+            this.label12.Location = new System.Drawing.Point(231, 581);
             this.label12.Name = "label12";
             this.label12.Size = new System.Drawing.Size(120, 15);
             this.label12.TabIndex = 19;
@@ -503,7 +505,7 @@
             // 
             this.label13.AutoSize = true;
             this.label13.Font = new System.Drawing.Font("Microsoft Sans Serif", 9F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(204)));
-            this.label13.Location = new System.Drawing.Point(235, 581);
+            this.label13.Location = new System.Drawing.Point(426, 581);
             this.label13.Name = "label13";
             this.label13.Size = new System.Drawing.Size(104, 15);
             this.label13.TabIndex = 20;
