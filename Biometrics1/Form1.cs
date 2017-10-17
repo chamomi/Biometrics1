@@ -427,7 +427,7 @@ namespace Biometrics1
                 for (int i = 0; i < b.Height; i++)
                 {
                     c = b.GetPixel(j, i);
-                    ProjX[j] += c.R + c.G + c.B;
+                    ProjX[j] += (c.R + c.G + c.B)/3;
                 }
             }
             DrawHist(ProjX, Color.Orange);
@@ -440,7 +440,7 @@ namespace Biometrics1
                 for (int i = 0; i < b.Width; i++)
                 {
                     c = b.GetPixel(i, j);
-                    ProjY[j] += c.R + c.G + c.B;
+                    ProjY[j] += (c.R + c.G + c.B)/3;
                 }
             }
             DrawHist(ProjY, Color.Purple);
@@ -669,11 +669,7 @@ namespace Biometrics1
         {
             Bitmap b = ExtendBitmap((Bitmap)pictureBox1.Image);
 
-            int[,] kernel = new int[3, 3];
-            for (int i = 0; i < 3; i++)
-                for (int j = 0; j < 3; j++)
-                    kernel[i,j] = -1;
-            kernel[1, 1] = 9;
+            int[,] kernel = new int[3, 3] { { -1, -1, -1 }, { -1, 9, -1 }, { -1, -1, -1 } };
 
             pictureBox1.Image = ApplyMatrix(b, kernel);
         }
@@ -695,9 +691,9 @@ namespace Biometrics1
                         for(int n=0;n<dim;n++)
                         {
                             c = b.GetPixel(i + m, j + n);
-                            sum[0] += c.R * kernel[m, n];
-                            sum[1] += c.G * kernel[m, n];
-                            sum[2] += c.B * kernel[m, n];
+                            sum[0] += c.R * kernel[n, m];
+                            sum[1] += c.G * kernel[n, m];
+                            sum[2] += c.B * kernel[n, m];
                         }
                     try
                     {
@@ -723,12 +719,12 @@ namespace Biometrics1
             Bitmap b2 = ApplyMatrix((Bitmap)pictureBox1.Image, Gy);
 
             Bitmap result = (Bitmap)pictureBox1.Image;
-            int c;
             for(int i=0;i<result.Width;i++)
                 for(int j=0;j<result.Height;j++)
                 {
-                    c = b1.GetPixel(i, j).R + b2.GetPixel(i, j).R;
-                    result.SetPixel(i, j, Color.FromArgb(result.GetPixel(i, j).A, Check(c), Check(c), Check(c)));
+                    result.SetPixel(i, j, Color.FromArgb(result.GetPixel(i, j).A, Check(b1.GetPixel(i, j).R + b2.GetPixel(i, j).R),
+                        Check(b1.GetPixel(i, j).G + b2.GetPixel(i, j).G),
+                        Check(b1.GetPixel(i, j).B + b2.GetPixel(i, j).B)));
                 }
             pictureBox1.Image = result;
         }
@@ -768,14 +764,14 @@ namespace Biometrics1
                     {
                         for (int filterX = -filterOffset; filterX <= filterOffset; filterX++)
                         {
-                            calcOffset = byteOffset +  (filterX * 4) +  (filterY * sourceData.Stride);
+                            calcOffset = byteOffset + (filterX * 4) + (filterY * sourceData.Stride);
 
                             colorX[0] += (double)(pixelBuffer[calcOffset + 2]) * Gx[filterY + filterOffset, filterX + filterOffset];
-                            colorX[1] += (double) (pixelBuffer[calcOffset + 1]) * Gx[filterY +  filterOffset,  filterX + filterOffset];
+                            colorX[1] += (double)(pixelBuffer[calcOffset + 1]) * Gx[filterY + filterOffset, filterX + filterOffset];
                             colorX[2] += (double)(pixelBuffer[calcOffset]) * Gx[filterY + filterOffset, filterX + filterOffset];
 
                             colorY[0] += (double)(pixelBuffer[calcOffset + 2]) * Gy[filterY + filterOffset, filterX + filterOffset];
-                            colorY[1] += (double) (pixelBuffer[calcOffset + 1]) * Gy[filterY + filterOffset, filterX + filterOffset];
+                            colorY[1] += (double)(pixelBuffer[calcOffset + 1]) * Gy[filterY + filterOffset, filterX + filterOffset];
                             colorY[2] += (double)(pixelBuffer[calcOffset]) * Gy[filterY + filterOffset, filterX + filterOffset];
                         }
                     }
